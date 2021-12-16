@@ -1,12 +1,12 @@
 #include <iostream>
-#include <fmt/format.h>
+//#include <fmt/format.h>
 #include <type_traits>
 
 template <typename T>
 struct TypeIdentity{ using type = T; };
 
-template <typename T>
-using TypeIdentity_t = typename TypeIdentity<T>::type;
+//template <typename T>
+//using TypeIdentity_t = typename TypeIdentity<T>::type;
 
 
 template <auto v>
@@ -186,13 +186,13 @@ static void test_isUnion(){
 
 }
 
-namespace Implementation{
+namespace Impl{
     std::true_type  IsNullPtrImpl(std::nullptr_t);
     std::false_type IsNullPtrImpl(...);
 }
 
 template <typename T>
-using IsNullPtrT = decltype(Implementation::IsNullPtrImpl(std::declval<T>()));
+using IsNullPtrT = decltype(Impl::IsNullPtrImpl(std::declval<T>()));
 
 template <typename T>
 inline constexpr bool IsNullPtrT_v = IsNullPtrT<T>::value;
@@ -209,16 +209,27 @@ static void test_nullptr(){
 
 }
 
+
+namespace Impl{
+    using YES = int;
+    using NO = long;
+
+    template <typename B, typename = decltype(B())>
+    static YES test_def_ctr(B *) {}
+
+    template <typename T>
+    static NO test_def_ctr(...) {}
+}
+
 template <typename T>
 struct IsDefaultConstructable{
-    template <typename S, typename = decltype(S())>
-    static long test(S *);
 
-    template <typename S>
-    static char test(...);
+    //D* p;
+    //                 return_val = Impl::test_child<B,D>(p);
 
-    constexpr static bool value =
-            std::is_same_v<decltype(test<T>(nullptr)), long>;
+    inline static auto return_val = Impl::test_def_ctr<T>(nullptr);
+
+    constexpr static bool value = std::is_same_v<decltype(return_val), Impl::YES>;
 };
 
 template <typename T>
@@ -228,7 +239,7 @@ inline constexpr bool IsDefaultConstructable_v = IsDefaultConstructable<T>::valu
 static void test_IsDefaultConstructable(){
     struct X{
         int n_;
-        X(int n) : n_(n) {}
+        explicit X(int n) : n_(n) {}
     };
 
     static_assert(IsDefaultConstructable_v<std::string> == true);
@@ -239,27 +250,66 @@ static void test_IsDefaultConstructable(){
 }
 
 
-namespace Implementation{
+namespace Impl{
     template <typename T>
-    std::bool_constant< !std::is_union_v<T> > test(int T::*);
+    using IS_NOT_UNION = std::bool_constant< !std::is_union_v<T> >;
+    using IS_UNION  = std::false_type;
+
     template <typename T>
-    std::false_type test(...);
+    IS_NOT_UNION<T> test_not_union(int T::*){}
+    template <typename T>
+    [[maybe_unused]] IS_UNION test_not_union(...){}
 }
 
 template <typename T>
-using IsClass =  decltype(Implementation::test<T>(nullptr));
+using IsClass =  decltype(Impl::test_not_union<T>(nullptr));
 
 template <typename T>
 inline constexpr bool IsClass_v = IsClass<T>::value;
 
 
 static void test_isClass(){
-    class C;
-    static_assert(IsClass_v<C> == true);
-    static_assert(IsClass_v<int> == false);
+    class C{};
 
+    static_assert(IsClass_v<float> == false);
+    static_assert(IsClass_v<C> == true);
+
+    static_assert(std::is_class_v<float> == false);
     static_assert(std::is_class_v<C> == true);
-    static_assert(std::is_class_v<double> == false);
+
+}
+
+
+namespace Impl{
+
+    template <typename B,typename D, typename = decltype((B)D())>
+    static YES test_child(B *) {}
+
+    template <typename B,typename D>
+    static NO test_child(...) {}
+
+}
+
+template <typename B, typename D>
+struct is_base_of
+{
+    static const bool value = std::is_same_v<decltype(Impl::test_child<B,D>(nullptr)),Impl::YES>;
+};
+
+template <typename B, typename D>
+inline constexpr bool is_base_of_v = is_base_of<B,D>::value;
+
+
+static void test_isChild(){
+    class B{};
+    class D : public B {};
+    class C{};
+
+    static_assert(is_base_of_v<B,C> == false);
+    static_assert(is_base_of_v<B,D> == true);
+
+    static_assert(std::is_base_of_v<B,C> == false);
+    static_assert(std::is_base_of_v<B,D> == true);
 
 }
 int main() {
@@ -277,5 +327,6 @@ int main() {
     test_IsDefaultConstructable();
     test_isUnion();
     test_isClass();
+    test_isChild();
     return 0;
 }
