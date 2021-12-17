@@ -1,5 +1,6 @@
 #include <fmt/format.h>
 #include <iostream>
+#include <type_traits>
 
 //// Metaprogramming IsPrime implementation - Erwin Unruh 1994
 
@@ -111,13 +112,84 @@ static void test_application(){
     X<7> x7; x7.info();
 }
 
+//SFINAE
+
+template <typename T, std::size_t N>
+std::size_t broj_elemenata(T (&arg)[N]){
+    std::puts(__PRETTY_FUNCTION__ );
+    return N;
+}
+
+template <typename T>
+typename T::size_type broj_elemenata(T const & arg){
+    std::puts(__PRETTY_FUNCTION__ );
+    return arg.size();
+}
+
+int broj_elemenata(...){
+    return 0;
+}
+
+
+static void test_size(){
+
+    int v[3] = {1,2,3};
+    fmt::print("Broj elemenata(v[3]) = {}\n",broj_elemenata(v));
+    fmt::print("Broj elemenata('123') = {}\n", broj_elemenata("12345"));
+    std::vector vec{1,2,3,4};
+    fmt::print("Broj elemenata(std::vec) = {}\n", broj_elemenata(vec));
+}
+
+
+
+//Kompilacijski if
+
+/**
+ * Uvjet se provjerava za vrijeme compilacije.
+ * @tparam T
+ * @param arg
+ * @return
+ */
+//template <typename T>
+//std::string asString(T const & arg){
+//    if constexpr(std::is_same_v<T,std::string>)
+//        return arg;
+//    else if (std::is_arithmetic_v<T>)
+//        return std::to_string(arg);
+//    else
+//        return std::string{arg};
+//}
+//
+//static void test_asString(){
+//
+//    int x = 8;
+//    fmt::print("x = {}\n",asString(x));
+//    fmt::print("x = {}\n",asString("aaa"));
+//}
+
+template <typename T>
+void foo(T t){
+    if constexpr(std::is_integral_v<T>)
+        fmt::print("Integralan tip.\n");
+    else
+        nedefinirana_fja(t);
+}
+
+static void test_if(){
+    foo(4);
+}
+
+//tagiranje/oznacavanje
+template <typename Iterator,typename Distance
 
 
 int main(){
     //test_is_prime();
     //test_is_prime_cpp11();
     //test_is_prime_cpp14();
-    test_application();
-
+    //test_application();
+    //test_size();
+    //test_asString();
+    test_if();
     return 0;
 }

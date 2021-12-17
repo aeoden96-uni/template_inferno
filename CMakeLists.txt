@@ -11,3 +11,6 @@ target_link_libraries(lecture_2 fmt::fmt-header-only)
 
 add_executable(lecture_3 03_recursion_is_prime.cpp)
 target_link_libraries(lecture_3 fmt::fmt-header-only)
+set_target_properties(lecture_3
+        PROPERTIES
+        CXX_STANDARD 20)
