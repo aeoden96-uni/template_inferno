@@ -187,7 +187,7 @@ void advanceImpl(Iterator & it,Distance n,std::random_access_iterator_tag){
 
 template <typename Iterator,typename Distance>
 void advanceImpl(Iterator & it,Distance n,std::bidirectional_iterator_tag){
-    it(n>=0){
+    if(n>=0){
         while(n>0){
             ++it; --n;
         }
@@ -200,12 +200,54 @@ void advanceImpl(Iterator & it,Distance n,std::bidirectional_iterator_tag){
 }
 
 template <typename Iterator,typename Distance>
-void advanceImpl(Iterator & it,Distance n,std::random_access_iterator_tag){
-    it += n;
+void advanceImpl(Iterator & it,Distance n,std::input_iterator_tag){
+    while(n>0){
+        ++it; --n;
+    }
+}
+
+template <typename Iterator,typename Distance>
+void advance(Iterator & it, Distance n){
+    using Category = typename std::iterator_traits<Iterator>::iterator_category;
+    advanceImpl(it,n,Category{});
+}
+
+
+template <typename Iterator,typename Distance>
+void advance1(Iterator & it, Distance n){
+    using Category = typename std::iterator_traits<Iterator>::iterator_category;
+    if constexpr(std::is_convertible_v<Category, std::random_access_iterator_tag>){
+        it += n;
+    }
+    else if constexpr(std::is_convertible_v<Category, std::bidirectional_iterator_tag>){
+        if(n>=0){
+            while(n>0){
+                ++it; --n;
+            }
+        }
+        else{
+            while(n<0){
+                --it; ++n;
+            }
+        }
+    }
+    else{
+        while(n>0){
+            ++it; --n;
+        }
+    }
 }
 
 
 int main(){
+    std::vector<int> a{1,2,3,4};
+    auto it = a.begin();
+    ::advance1(it,2);
+
+    fmt::print("{}\n",*it);
+
+
+
     //test_is_prime();
     //test_is_prime_cpp11();
     //test_is_prime_cpp14();
