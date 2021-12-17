@@ -180,7 +180,29 @@ static void test_if(){
 }
 
 //tagiranje/oznacavanje
-template <typename Iterator,typename Distance
+template <typename Iterator,typename Distance>
+void advanceImpl(Iterator & it,Distance n,std::random_access_iterator_tag){
+    it += n;
+}
+
+template <typename Iterator,typename Distance>
+void advanceImpl(Iterator & it,Distance n,std::bidirectional_iterator_tag){
+    it(n>=0){
+        while(n>0){
+            ++it; --n;
+        }
+    }
+    else{
+        while(n<0){
+            --it; ++n;
+        }
+    }
+}
+
+template <typename Iterator,typename Distance>
+void advanceImpl(Iterator & it,Distance n,std::random_access_iterator_tag){
+    it += n;
+}
 
 
 int main(){
