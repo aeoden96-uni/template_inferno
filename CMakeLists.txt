@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.22)
-find_package(fmt)
 set(CMAKE_CXX_STANDARD 20)
+project(meta)
+find_package(fmt)
 
-project(lecture_1)
-add_executable(lecture_1 lecture_1.cpp)
+add_executable(lecture_1 01_introduction.cpp)
 target_link_libraries(lecture_1 fmt::fmt-header-only)
 
-project(lecture_2)
-add_executable(lecture_2 lecture_2.cpp)
+add_executable(lecture_2 02_implementations.cpp)
 target_link_libraries(lecture_2 fmt::fmt-header-only)
+
+add_executable(lecture_3 03_recursion_is_prime.cpp)
+target_link_libraries(lecture_3 fmt::fmt-header-only)
